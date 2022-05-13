@@ -11,7 +11,6 @@ RUN apt update -y -q && apt upgrade -y -q && apt update -y -q && \
     flex \
     g++ \
     gcc \
-    git \
     jq \
     libc6-dev-i386 \
     linux-libc-dev \
@@ -34,6 +33,10 @@ RUN apt update -y -q && apt upgrade -y -q && apt update -y -q && \
     ./aws/install && \
     rm -rf aws*
 
+# Install recent git (>2.18)
+RUN apt install software-properties-common && \
+    add-apt-repository ppa:git-core/ppa -y && \
+    apt update -y -q && apt install git -y
 
 WORKDIR /root
 RUN mkdir -p /opt
@@ -51,6 +54,11 @@ RUN mkdir -p /opt/compiler-explorer && \
 
 RUN git clone https://github.com/olsner/jobclient && \
     cd jobclient && make && mv jobserver /bin && cd .. && rm -rf jobclient
+
+# Install the ninja fork needed by manyclangs-build
+RUN git clone -n https://github.com/stefanb2/ninja.git && cd ninja && \
+    git checkout f404f0059d71c8c86da7b56c48794266b5befd10 && \
+    cmake . && cmake --build . && cp ./ninja /usr/local/bin/ninja-jobclient
 
 RUN curl -sL https://go.dev/dl/go1.18.2.linux-amd64.tar.gz | tar zxf - -C /opt && \
     ln -sf /opt/go/bin/go /bin
